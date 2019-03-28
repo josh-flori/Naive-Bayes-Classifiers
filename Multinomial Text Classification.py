@@ -43,7 +43,7 @@ import numpy as np
 stop_words = set(stopwords.words('english')) 
 
 
-data=pd.read_excel('/users/josh.flori/desktop/models/Text  Classification/t.xlsx')
+data=pd.read_excel('/users/josh.flori/path/text_data.xlsx')
 # removed stop words comments
 comments=[[" ".join([w.lower() for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comment'][i].split("------------------------------")[0].replace("\n",""))) if w not in stop_words])][0] for i in range(len(data['comment']))]
 
