@@ -26,6 +26,14 @@ scikit-learn includes several variants of the NAIVE BAYES classifier; the one mo
 word counts is the multinomial variant
 
 
+Every sklearn's transform's fit() just calculates the parameters (e.g. 𝜇 and 𝜎 in case of 
+StandardScaler) and saves them as an internal objects state. Afterwards, you can call its transform() 
+method to apply the transformation to a particular set of examples.
+
+fit_transform() joins these two steps and is used for the initial fitting of parameters on the 
+training set 𝑥, but it also returns a transformed 𝑥′. Internally, it just calls first fit() and then 
+transform() on the same data.
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -84,7 +92,7 @@ text_classifier = Pipeline([
      ('tfidf', TfidfTransformer()),
      ('clf', MultinomialNB()), ])
 
-text_classifier.fit(X_train, y_train) 
+text_classifier.fit(X_train, y_train)
 predicted=text_classifier.predict(X_test)
 np.mean(predicted == y_test)
 
@@ -101,8 +109,26 @@ np.mean(predicted == y_test)
 ###########################################
 """ included for educational purposes, the following is just a longhand way of doing things without the pipeline..."""
 count_vect = CountVectorizer()
+tfidf_transformer = TfidfTransformer()
+
+X_train_counts = count_vect.fit_transform(X_train)
+tf_transformer = TfidfTransformer(use_idf=False).fit(X_train_counts)
+
+X_train_tf = tf_transformer.transform(X_train_counts)
+X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+
+
 # get tfidf information off of basic count information i guess
 X_train_tfidf = TfidfTransformer().fit_transform(count_vect.fit_transform(X_train))
+
+
+
+
+
+
+
+
+
 # fit the classifier.
 classifier = MultinomialNB().fit(X_train_tfidf, y_train)
 predicted = classifier.predict(X_test)
@@ -115,7 +141,7 @@ accuracy=[predicted[i][0]==y_test.tolist()[i] for i in range(len(predicted))].co
 # it would look something like this [[0.0, 0.57, 0.0, 0.57, 0.57], where each entry corresponds to a word in the vocabulary and the number 
 # is the calculated td-if for that word in that training example.
 feature_vectors_list = []
-for i in X_train_tfidf:
+for i in count_vect.fit_transform([i for i in data['comment']]):
     feature_vectors_list.append(list(i.A[0]))
 
 
@@ -123,3 +149,57 @@ for i in X_train_tfidf:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+x=[i for i in data['comment']]
+y=data['yes_no']
+
+from sklearn.feature_extraction.text import CountVectorizer
+count_vect = CountVectorizer()
+X_train_counts = count_vect.fit_transform(x)
+X_train_counts.shape
+
+# observe that you get a result like:
+# [4, 1]
+# [1, 5]
+# [4, 1]
+# where rows correspond to rows in x, and length is = total vocab - removed stopwords. the integers are the counts of that vocab word in that training example
+for i in X_train_counts:
+    print(list(i.A[0]))
+
+
+
+from sklearn.feature_extraction.text import TfidfTransformer
+tf_transformer = TfidfTransformer(use_idf=False).fit(X_train_counts)
+X_train_tf = tf_transformer.transform(X_train_counts)
+X_train_tf.shape
+
+
+tfidf_transformer = TfidfTransformer()
+X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+X_train_tfidf.shape
+
+
+from sklearn.naive_bayes import MultinomialNB
+clf = MultinomialNB().fit(X_train_tfidf, twenty_train.target)
+
+
+docs_new = ['God is love', 'OpenGL on the GPU is fast']
+X_new_counts = count_vect.transform(docs_new)
+X_new_tfidf = tfidf_transformer.transform(X_new_counts)
+
+predicted = clf.predict(X_new_tfidf)
