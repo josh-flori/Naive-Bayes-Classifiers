@@ -182,16 +182,27 @@ for i in X_train_counts:
     print(list(i.A[0]))
 
 
-
 from sklearn.feature_extraction.text import TfidfTransformer
 tf_transformer = TfidfTransformer(use_idf=False).fit(X_train_counts)
-X_train_tf = tf_transformer.transform(X_train_counts)
-X_train_tf.shape
-
-
-tfidf_transformer = TfidfTransformer()
-X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+X_train_tfidf = tf_transformer.transform(X_train_counts)
 X_train_tfidf.shape
+
+# observe that you get a result like:
+# [0.970, 0.242]
+# [0.196, 0.980]
+# [0.970, 0.242]
+# where rows correspond to rows in x, and length is = total vocab - removed stopwords. the numbers are the td-idf for that word in that class (confirmed for that class)
+for i in X_train_tf:
+    print(list(i.A[0]))
+
+
+# duplicate of information above.... but i think you... may need to use the above method in order to keep the transformer information and fit new data????
+# tfidf_transformer = TfidfTransformer()
+# X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+# X_train_tfidf.shape
+#
+# for i in X_train_tfidf:
+#     print(list(i.A[0]))
 
 
 from sklearn.naive_bayes import MultinomialNB
@@ -199,7 +210,50 @@ clf = MultinomialNB().fit(X_train_tfidf, twenty_train.target)
 
 
 docs_new = ['God is love', 'OpenGL on the GPU is fast']
-X_new_counts = count_vect.transform(docs_new)
+X_new_counts = count_vect.transform(x)
 X_new_tfidf = tfidf_transformer.transform(X_new_counts)
 
 predicted = clf.predict(X_new_tfidf)
+
+
+
+
+
+
+
+data=pd.read_excel('/users/josh.flori/desktop/t.xlsx')
+x=[i for i in data['comment']]
+X_new_counts = count_vect.transform(x)
+for i in X_new_counts:
+    print(list(i.A[0]))
+    
+    
+    
+# ok just jotting down thoughts here.....  the way this works
+count_vect = CountVectorizer()
+X_train_counts = count_vect.fit_transform(x_train)
+# is that... the second line will actually change the value of count_vect. the first line instantiates it, i think, then the second line sets count_vect to learn the vocalubalry of x_train. so that when you go to do something like this 
+count_vect.transform(x_test)
+# any new words in x_test not in x_train will not be included in the output (confirmed!)
+# all that will happen is that for each test example you will get the tfidf for each word in the x_train vocabulary as it presents or does not present itself in x_test... which i guess makes sense. so you will want to run a test that checks how many words in new data were not in vocabulary. presumably not much but im sure at some point you will see a lot of new words on the basis of different threads have different keywords.
+
+# so the important components here are count_vect which inherents the original vocabulary and which the parameters will be learned against, it must be passed to the new test data to create counts, then from the counts you need to create tdidf information using
+# X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+# tfidf_transformer will create an output identical in size to count_vect.transform(x), it will just output tfidf instead of counts.
+# so again, train count_vect to have training vocab size and order by calling
+count_vect = CountVectorizer()
+X_train_counts = count_vect.fit_transform(x_train)
+# then get tfidf training data like 
+X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+# then at test time get new data based on vocab length and order or training data like
+X_test_counts = count_vect.transform(x_test)
+X_test_tfidf = tfidf_transformer.transform(X_test_counts)
+
+# THEN YOU can process that through the fitted model to get predictions, the only question i have now is...... how does tfidf actually work in a naive bayes classifier, is it plugged into the exact same model
+
+
+
+
+
+
+
