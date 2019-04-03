@@ -38,27 +38,23 @@ transform() on the same data.
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+# i am setting a word count minimum of 50 for reddit text data
+# i normalize the "yes_no" column in excel before bringing it in, ensuring the ONLY values are lower case yes,no
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
-from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize   
 import re
 import pandas as pd
 from sklearn.pipeline import Pipeline
 import numpy as np
 
-stop_words = set(stopwords.words('english')) 
 
+data=pd.read_excel('/users/josh.flori/desktop/text_data.xlsx')
 
-data=pd.read_excel('/users/josh.flori/desktop/t.xlsx')
-
-# removed stop words comments, I found performance to be different when I just relied on sklearn to remove them
-#comments=[[" ".join([w for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comment'][i].split("------------------------------")[0].replace("\n",""))) if w not in stop_words])][0] for i in range(len(data['comment']))]
-
-# You can also choose to not remove stopwords and leave that up to sklean
+# get comments
 comments=[[" ".join([w for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comment'][i].split("------------------------------")[0].replace("\n","")))])][0] for i in range(len(data['comment']))]
 
 
@@ -78,11 +74,11 @@ def sample_many(text_classifier,n):
         text_classifier.fit(X_train, y_train) 
         predicted=text_classifier.predict(X_test)
         test_accuracy=np.mean(predicted == y_test)
-        print(test_accuracy)
+        print(np.round(test_accuracy,3))
         total.append(test_accuracy)
     print("\n")
-    print(np.mean(total))
-    print(np.median(total))
+    print(np.round(np.mean(total),3))
+    print(np.round(np.median(total),3))
 
 
 
