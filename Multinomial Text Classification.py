@@ -40,7 +40,7 @@ transform() on the same data.
 
 # i am setting a word count minimum of 50 for reddit text data
 # i normalize the "yes_no" column in excel before bringing it in, ensuring the ONLY values are lower case yes,no
-
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -50,7 +50,7 @@ import re
 import pandas as pd
 from sklearn.pipeline import Pipeline
 import numpy as np
-
+from sklearn.metrics import f1_score
 
 data=pd.read_excel('/users/josh.flori/desktop/text_data.xlsx')
 
@@ -60,6 +60,13 @@ comments=[[" ".join([w for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comm
 
 # test/train split
 X_train, X_test, y_train, y_test = train_test_split(comments, data['yes_no'])
+
+
+
+def test_imbalance(y_train):
+    for i in list(set(y_train)):
+        print(y_train.tolist().count(i))
+    print("\n\nIf the above numbers are in anything other than equal proportion, do not rely on accuracy as a measure of model performance.\n\n")
 
 
 
@@ -85,18 +92,26 @@ def sample_many(text_classifier,n):
 """"""""""""""""""""""""
 """" CREATE PIPELINE """
 """"""""""""""""""""""""
+# DEFINITION: Sequentially apply a list of transforms and a final estimator. Intermediate steps of pipeline must implement fit and transform methods and the final estimator only needs to implement fit.    
 # create a pipeline, which is an easy way to create features and build a model.
 # the following uses the CountVectorizer
 text_classifier = Pipeline([
      ('vect', CountVectorizer()),
      ('tfidf', TfidfTransformer()),
-     ('clf', MultinomialNB()), ])
+     ('clf', MultinomialNB()) ])
 
 text_classifier.fit(X_train, y_train)
 predicted=text_classifier.predict(X_test)
+
+test_imbalance(y_train)
 # test accuracy
 np.mean(predicted == y_test)
-
+# confusion matrix, 
+#[TN,TP
+# FN,FP]
+confusion_matrix(y_test, predicted)
+# F1 score, "average" MUST be set for multi-class classification (more than 2 classes)... also the classes must be numbers
+f1_score(y_test, predicted)
 
 
 """""""""""""""""""""""""""""""""""
@@ -121,7 +136,7 @@ sample_many(text_classifier,n)
 # The first line below instantiates a CountVectorizer. The second line will actually change the value of that count_vect. Count_vect inherents the original train vocabulary and the model parameters will be learned against it. It must be passed to the new test data to create word counts on that data. From both train and test, it must be passed into a tfidf transfomer to generate tfidf data.
 # CountVectorizer filters stopwords, lowers words and tokenizes words.
 count_vect = CountVectorizer()
-X_train_counts = count_vect.fit_transform(x_train)
+X_train_counts = count_vect.fit_transform(X_train)
 
 # Run this:
 for i in X_train_counts:
