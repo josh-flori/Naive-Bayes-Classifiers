@@ -39,7 +39,6 @@ transform() on the same data.
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 
-
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -57,7 +56,7 @@ stop_words = set(stopwords.words('english'))
 data=pd.read_excel('/users/josh.flori/desktop/t.xlsx')
 
 # removed stop words comments, I found performance to be different when I just relied on sklearn to remove them
-comments=[[" ".join([w for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comment'][i].split("------------------------------")[0].replace("\n",""))) if w not in stop_words])][0] for i in range(len(data['comment']))]
+#comments=[[" ".join([w for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comment'][i].split("------------------------------")[0].replace("\n",""))) if w not in stop_words])][0] for i in range(len(data['comment']))]
 
 # You can also choose to not remove stopwords and leave that up to sklean
 comments=[[" ".join([w for w in word_tokenize(re.sub(r'[^A-Za-z]',' ',data['comment'][i].split("------------------------------")[0].replace("\n","")))])][0] for i in range(len(data['comment']))]
@@ -78,9 +77,9 @@ def sample_many(text_classifier,n):
         # fit a new model on new splits
         text_classifier.fit(X_train, y_train) 
         predicted=text_classifier.predict(X_test)
-        score=np.mean(predicted == y_test)
-        print(score)
-        total.append(score)
+        test_accuracy=np.mean(predicted == y_test)
+        print(test_accuracy)
+        total.append(test_accuracy)
     print("\n")
     print(np.mean(total))
     print(np.median(total))
@@ -99,9 +98,8 @@ text_classifier = Pipeline([
 
 text_classifier.fit(X_train, y_train)
 predicted=text_classifier.predict(X_test)
-# accuracy
+# test accuracy
 np.mean(predicted == y_test)
-
 
 
 
@@ -121,50 +119,9 @@ sample_many(text_classifier,n)
                EXTRA STUFF                
 ###########################################
 ###########################################
-""" included for educational purposes, the following is just a longhand way of doing things without the pipeline..."""
-count_vect = CountVectorizer()
-tfidf_transformer = TfidfTransformer()
+""" included for educational purposes, the following is just a longhand way of doing things 
+    without the pipeline and a more full explanation of what the pipeline is doing...   """
 
-X_train_counts = count_vect.fit_transform(X_train)
-tf_transformer = TfidfTransformer(use_idf=False).fit(X_train_counts)
-
-
-X_train_tf = tf_transformer.transform(X_train_counts)
-X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-
-
-# get tfidf information off of basic count information i guess
-X_train_tfidf = TfidfTransformer().fit_transform(count_vect.fit_transform(X_train))
-
-
-
-
-
-# fit the classifier.
-classifier = MultinomialNB().fit(X_train_tfidf, y_train)
-predicted = classifier.predict(X_test)
-accuracy=[predicted[i][0]==y_test.tolist()[i] for i in range(len(predicted))].count(True)/len(predicted)
-
-
-
-from sklearn.naive_bayes import MultinomialNB
-clf = MultinomialNB().fit(X_train_tfidf, twenty_train.target)
-
-
-docs_new = ['God is love', 'OpenGL on the GPU is fast']
-X_new_counts = count_vect.transform(x)
-X_new_tfidf = tfidf_transformer.transform(X_new_counts)
-
-predicted = clf.predict(X_new_tfidf)
-
-
-
-
-    
-    
-    
-----------------------    
-    
 # The first line below instantiates a CountVectorizer. The second line will actually change the value of that count_vect. Count_vect inherents the original train vocabulary and the model parameters will be learned against it. It must be passed to the new test data to create word counts on that data. From both train and test, it must be passed into a tfidf transfomer to generate tfidf data.
 # CountVectorizer filters stopwords, lowers words and tokenizes words.
 count_vect = CountVectorizer()
@@ -173,7 +130,7 @@ X_train_counts = count_vect.fit_transform(x_train)
 # Run this:
 for i in X_train_counts:
     print(list(i.A[0]))
-# And observe that you get a result like:
+# To observe that you get a result like:
 # [4, 1...]
 # [1, 5...]
 # [4, 1...]
@@ -186,35 +143,26 @@ X_train_tfidf = tf_transformer.fit_transform(X_train_counts)
 # And run this:
 for i in X_train_tf:
     print(list(i.A[0]))
-# And observe that you get a result like:
+# To observe that you get a result like:
 # [0.970, 0.242...]
 # [0.196, 0.980...]
 # [0.970, 0.242...]
 # where rows correspond to rows in x, and length is = (total vocab - removed stopwords). The numbers are the td-idf for that word.
 
 
-
 # Fit the classifier.
 classifier = MultinomialNB().fit(X_train_tfidf, y_train)
 predicted = classifier.predict(X_test)
+# Accuracy
+np.mean(predicted == y_test)
 
 
-
-count_vect.transform(x_test)
-# any new words in x_test not in x_train will not be included in the output (confirmed!)
-# all that will happen is that for each test example you will be returned an array the length of the train vocab, and in each spot of that array is the count of that train vocab word in the x_test example... which i guess makes sense. so you will want to run a test that checks how many words in new data were not in vocabulary. presumably not much but im sure at some point you will see a lot of new words on the basis of different threads have different keywords.
-
-# so the important components here are count_vect which inherents the original vocabulary and which the parameters will be learned against, it must be passed to the new test data to create counts, then from the counts you need to create tdidf information using
-X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-# tfidf_transformer will create an output identical in size to count_vect.transform(x), it will just output tfidf instead of counts.
-
-# you can run your model, then generate prediction on new data by doing:
-X_test_counts = count_vect.transform(x_test)
+# Generate prediction on new data by doing (remember that any new words in X_test that were not in X_train will not be passed into the model, they will be ignored):
+X_test_counts = count_vect.transform(X_test)
 X_test_tfidf = tfidf_transformer.transform(X_test_counts)
 
 # Then you can process that through the fitted model to get predictions
-classifier = MultinomialNB().fit(X_train_tfidf, y_train)
-predicted = classifier.predict(X_test)
+predicted = classifier.predict(X_test_tfidf)
 
 
 
