@@ -66,7 +66,7 @@ X_train, X_test, y_train, y_test = train_test_split(comments, data['yes_no'])
 def test_imbalance(y_train):
     for i in list(set(y_train)):
         print(y_train.tolist().count(i))
-    print("\n\nIf the above numbers are in anything other than equal proportion, do not rely on accuracy as a measure of model performance.\n\n")
+    print("\n\nIf the above numbers are in anything other than equal proportion, do not rely on accuracy as a measure of model performance. If they are greatly imbalanced you made need to use stratified train/test splits if the splits do not already have equal proportions of each class.\n\n")
 
 
 
@@ -92,9 +92,7 @@ def sample_many(text_classifier,n):
 """"""""""""""""""""""""
 """" CREATE PIPELINE """
 """"""""""""""""""""""""
-# DEFINITION: Sequentially apply a list of transforms and a final estimator. Intermediate steps of pipeline must implement fit and transform methods and the final estimator only needs to implement fit.    
-# create a pipeline, which is an easy way to create features and build a model.
-# the following uses the CountVectorizer
+# PIPELINE DEFINITION: Sequentially apply a list of transforms and a final estimator. Intermediate steps of pipeline must implement fit and transform methods and the final estimator only needs to implement fit.    
 text_classifier = Pipeline([
      ('vect', CountVectorizer()),
      ('tfidf', TfidfTransformer()),
@@ -107,8 +105,8 @@ test_imbalance(y_train)
 # test accuracy
 np.mean(predicted == y_test)
 # confusion matrix, 
-#[TN,TP
-# FN,FP]
+#[TN,FP
+# FN,TP]
 confusion_matrix(y_test, predicted)
 # F1 score, "average" MUST be set for multi-class classification (more than 2 classes)... also the classes must be numbers
 f1_score(y_test, predicted)
@@ -133,7 +131,7 @@ sample_many(text_classifier,n)
 """ included for educational purposes, the following is just a longhand way of doing things 
     without the pipeline and a more full explanation of what the pipeline is doing...   """
 
-# The first line below instantiates a CountVectorizer. The second line will actually change the value of that count_vect. Count_vect inherents the original train vocabulary and the model parameters will be learned against it. It must be passed to the new test data to create word counts on that data. From both train and test, it must be passed into a tfidf transfomer to generate tfidf data.
+# The first line below instantiates a CountVectorizer. The second line will actually change the value of that count_vect. When using fit_transform, count_vect simultaneously inherents the original train vocabulary/size/order against which the model parameters will be learned. Count_vect must be passed to the new test data using ONLY the fransform method, NOT fit_transform to create word counts on that data. From both train and test, you must then generate tfidf data.
 # CountVectorizer filters stopwords, lowers words and tokenizes words.
 count_vect = CountVectorizer()
 X_train_counts = count_vect.fit_transform(X_train)
