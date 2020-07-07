@@ -1,3 +1,6 @@
+# Overview
+This repository exists as a personal summarization and guide to understanding Naive Bayes Classifiers in laymans terms.  
+
 # Naive Bayes Classifiers
 https://www.cs.waikato.ac.nz/ml/publications/2004/kibriya_et_al_cr.pdf
 
